@@ -1,0 +1,380 @@
+#include <iostream>
+#include <fstream>
+#include <cstring>
+#include <clocale>
+#include <cstdlib>
+
+#define MAX_STR_LEN 100
+#define FILENAME "pharmacy_data.dat"
+
+class PharmacyManager {
+private:
+    struct Time {
+        int hour;
+        int minute;
+    };
+
+    struct Pharmacy {
+        char name[MAX_STR_LEN];
+        char address[MAX_STR_LEN];
+        char phone[MAX_STR_LEN];
+        Time open_time;
+        Time close_time;
+    };
+
+    Pharmacy* pharmacies;
+    int count;
+    int capacity;
+
+public:
+    // Конструктор
+    PharmacyManager() : pharmacies(nullptr), count(0), capacity(0) {}
+
+    // Деструктор
+    ~PharmacyManager() {
+        free_memory();
+    }
+
+    void print_menu() {
+        std::cout << "\nМеню:\n";
+        std::cout << "1. Динамическое выделение памяти для массива структур\n";
+        std::cout << "2. Ввод элементов массива с клавиатуры\n";
+        std::cout << "3. Поиск элемента массива\n";
+        std::cout << "4. Сортировка массива\n";
+        std::cout << "5. Редактирование элемента массива\n";
+        std::cout << "6. Добавление нового элемента в конец\n";
+        std::cout << "7. Удаление указанного элемента из массива\n";
+        std::cout << "8. Вставка нового элемента\n";
+        std::cout << "9. Запись элементов массива в файл\n";
+        std::cout << "10. Считывание элементов массива из файла\n";
+        std::cout << "11. Вывод элементов массива на экран\n";
+        std::cout << "12. Освобождение памяти, выделенной для массива\n";
+        std::cout << "13. Окончание работы программы\n";
+        std::cout << "Выберите действие: ";
+    }
+
+    void allocate_memory() {
+        std::cout << "Введите емкость массива: ";
+        std::cin >> capacity;
+        if (pharmacies != nullptr) {
+            delete[] pharmacies;
+        }
+        pharmacies = new Pharmacy[capacity];
+        std::cout << "Память выделена для " << capacity << " элементов\n";
+    }
+
+    void input_pharmacies() {
+        if (pharmacies == nullptr) {
+            std::cout << "Сначала выделите память (пункт 1)!\n";
+            return;
+        }
+
+        std::cout << "Сколько аптек добавить? ";
+        int num;
+        std::cin >> num;
+
+        if (count + num > capacity) {
+            std::cout << "Недостаточно места! Доступно: " << capacity - count << " элементов\n";
+            return;
+        }
+
+        for (int i = 0; i < num; i++) {
+            std::cout << "\nАптека #" << count+1 << ":\n";
+            std::cout << "Название: "; std::cin >> pharmacies[count].name;
+            std::cout << "Адрес: "; std::cin >> pharmacies[count].address;
+            std::cout << "Телефон: "; std::cin >> pharmacies[count].phone;
+            std::cout << "Время открытия (чч мм): ";
+            std::cin >> pharmacies[count].open_time.hour >> pharmacies[count].open_time.minute;
+            std::cout << "Время закрытия (чч мм): ";
+            std::cin >> pharmacies[count].close_time.hour >> pharmacies[count].close_time.minute;
+            count++;
+        }
+    }
+
+    void search_pharmacy() {
+        if (count == 0) {
+            std::cout << "Массив пуст!\n";
+            return;
+        }
+
+        std::cout << "Поиск по:\n1. Названию\n2. Адресу\n3. Телефону\n4. Времени работы\nВыберите: ";
+        int choice;
+        std::cin >> choice;
+
+        char query[MAX_STR_LEN];
+        Time time;
+
+        switch(choice) {
+            case 1:
+                std::cout << "Введите название: ";
+                std::cin >> query;
+                for (int i = 0; i < count; i++) {
+                    if (strstr(pharmacies[i].name, query) != nullptr) {
+                        std::cout << i+1 << ". " << pharmacies[i].name << std::endl;
+                    }
+                }
+                break;
+            case 2:
+                std::cout << "Введите адрес: ";
+                std::cin >> query;
+                for (int i = 0; i < count; i++) {
+                    if (strstr(pharmacies[i].address, query) != nullptr) {
+                        std::cout << i+1 << ". " << pharmacies[i].name << " - " << pharmacies[i].address << std::endl;
+                    }
+                }
+                break;
+            case 3:
+                std::cout << "Введите телефон: ";
+                std::cin >> query;
+                for (int i = 0; i < count; i++) {
+                    if (strstr(pharmacies[i].phone, query) != nullptr) {
+                        std::cout << i+1 << ". " << pharmacies[i].name << " - " << pharmacies[i].phone << std::endl;
+                    }
+                }
+                break;
+            case 4:
+                std::cout << "Введите время (чч мм): ";
+                std::cin >> time.hour >> time.minute;
+                for (int i = 0; i < count; i++) {
+                    if (time.hour >= pharmacies[i].open_time.hour &&
+                        time.hour <= pharmacies[i].close_time.hour) {
+                        std::cout << i+1 << ". " << pharmacies[i].name << " - "
+                                  << pharmacies[i].open_time.hour << ":" << pharmacies[i].open_time.minute << "-"
+                                  << pharmacies[i].close_time.hour << ":" << pharmacies[i].close_time.minute << std::endl;
+                    }
+                }
+                break;
+            default:
+                std::cout << "Неверный выбор!\n";
+        }
+    }
+
+    void sort_pharmacies() {
+        if (count == 0) {
+            std::cout << "Массив пуст!\n";
+            return;
+        }
+
+        for (int i = 0; i < count-1; i++) {
+            for (int j = 0; j < count-i-1; j++) {
+                if (strcmp(pharmacies[j].name, pharmacies[j+1].name) > 0) {
+                    Pharmacy temp = pharmacies[j];
+                    pharmacies[j] = pharmacies[j+1];
+                    pharmacies[j+1] = temp;
+                }
+            }
+        }
+        std::cout << "Массив отсортирован!\n";
+    }
+
+    void edit_pharmacy() {
+        if (count == 0) {
+            std::cout << "Массив пуст!\n";
+            return;
+        }
+
+        int index;
+        std::cout << "Введите номер аптеки для редактирования: ";
+        std::cin >> index;
+        index--;
+
+        if (index < 0 || index >= count) {
+            std::cout << "Неверный индекс!\n";
+            return;
+        }
+
+        std::cout << "Название (" << pharmacies[index].name << "): ";
+        std::cin >> pharmacies[index].name;
+        std::cout << "Адрес (" << pharmacies[index].address << "): ";
+        std::cin >> pharmacies[index].address;
+        std::cout << "Телефон (" << pharmacies[index].phone << "): ";
+        std::cin >> pharmacies[index].phone;
+        std::cout << "Время открытия (" << pharmacies[index].open_time.hour << ":" 
+                  << pharmacies[index].open_time.minute << "): ";
+        std::cin >> pharmacies[index].open_time.hour >> pharmacies[index].open_time.minute;
+        std::cout << "Время закрытия (" << pharmacies[index].close_time.hour << ":" 
+                  << pharmacies[index].close_time.minute << "): ";
+        std::cin >> pharmacies[index].close_time.hour >> pharmacies[index].close_time.minute;
+    }
+
+    void add_pharmacy() {
+        if (pharmacies == nullptr) {
+            std::cout << "Сначала выделите память (пункт 1)!\n";
+            return;
+        }
+
+        if (count >= capacity) {
+            std::cout << "Массив переполнен!\n";
+            return;
+        }
+
+        std::cout << "\nНовая аптека #" << count+1 << ":\n";
+        std::cout << "Название: "; std::cin >> pharmacies[count].name;
+        std::cout << "Адрес: "; std::cin >> pharmacies[count].address;
+        std::cout << "Телефон: "; std::cin >> pharmacies[count].phone;
+        std::cout << "Время открытия (чч мм): ";
+        std::cin >> pharmacies[count].open_time.hour >> pharmacies[count].open_time.minute;
+        std::cout << "Время закрытия (чч мм): ";
+        std::cin >> pharmacies[count].close_time.hour >> pharmacies[count].close_time.minute;
+        count++;
+    }
+
+    void delete_pharmacy() {
+        if (count == 0) {
+            std::cout << "Массив пуст!\n";
+            return;
+        }
+
+        int index;
+        std::cout << "Введите номер аптеки для удаления: ";
+        std::cin >> index;
+        index--;
+
+        if (index < 0 || index >= count) {
+            std::cout << "Неверный индекс!\n";
+            return;
+        }
+
+        for (int i = index; i < count-1; i++) {
+            pharmacies[i] = pharmacies[i+1];
+        }
+        count--;
+        std::cout << "Аптека удалена\n";
+    }
+
+    void insert_pharmacy() {
+        if (pharmacies == nullptr) {
+            std::cout << "Сначала выделите память (пункт 1)!\n";
+            return;
+        }
+
+        if (count >= capacity) {
+            std::cout << "Массив переполнен!\n";
+            return;
+        }
+
+        int index;
+        std::cout << "Введите позицию для вставки: ";
+        std::cin >> index;
+        index--;
+
+        if (index < 0 || index > count) {
+            std::cout << "Неверная позиция!\n";
+            return;
+        }
+
+        for (int i = count; i > index; i--) {
+            pharmacies[i] = pharmacies[i-1];
+        }
+
+        std::cout << "\nНовая аптека #" << index+1 << ":\n";
+        std::cout << "Название: "; std::cin >> pharmacies[index].name;
+        std::cout << "Адрес: "; std::cin >> pharmacies[index].address;
+        std::cout << "Телефон: "; std::cin >> pharmacies[index].phone;
+        std::cout << "Время открытия (чч мм): ";
+        std::cin >> pharmacies[index].open_time.hour >> pharmacies[index].open_time.minute;
+        std::cout << "Время закрытия (чч мм): ";
+        std::cin >> pharmacies[index].close_time.hour >> pharmacies[index].close_time.minute;
+        count++;
+    }
+
+    void save_to_file() {
+        if (count == 0) {
+            std::cout << "Массив пуст!\n";
+            return;
+        }
+
+        std::ofstream file(FILENAME, std::ios::binary);
+        if (!file) {
+            std::cout << "Ошибка открытия файла для записи!\n";
+            return;
+        }
+
+        file.write(reinterpret_cast<char*>(&count), sizeof(int));
+        file.write(reinterpret_cast<char*>(pharmacies), count * sizeof(Pharmacy));
+        file.close();
+        std::cout << "Данные сохранены в файл\n";
+    }
+
+    void load_from_file() {
+        std::ifstream file(FILENAME, std::ios::binary);
+        if (!file) {
+            std::cout << "Ошибка открытия файла для чтения или файл не существует!\n";
+            return;
+        }
+
+        file.read(reinterpret_cast<char*>(&count), sizeof(int));
+        capacity = count;
+        
+        if (pharmacies != nullptr) {
+            delete[] pharmacies;
+        }
+        
+        pharmacies = new Pharmacy[capacity];
+        file.read(reinterpret_cast<char*>(pharmacies), count * sizeof(Pharmacy));
+        file.close();
+        std::cout << "Данные загружены из файла\n";
+    }
+
+    void print_pharmacies() {
+        if (count == 0) {
+            std::cout << "Массив пуст!\n";
+            return;
+        }
+
+        std::cout << "\nСписок аптек (" << count << "):\n";
+        for (int i = 0; i < count; i++) {
+            std::cout << i+1 << ". " << pharmacies[i].name << std::endl;
+            std::cout << "   Адрес: " << pharmacies[i].address << std::endl;
+            std::cout << "   Телефон: " << pharmacies[i].phone << std::endl;
+            std::cout << "   Время работы: " << pharmacies[i].open_time.hour << ":" 
+                      << pharmacies[i].open_time.minute << "-" << pharmacies[i].close_time.hour 
+                      << ":" << pharmacies[i].close_time.minute << "\n\n";
+        }
+    }
+
+    void free_memory() {
+        if (pharmacies != nullptr) {
+            delete[] pharmacies;
+            pharmacies = nullptr;
+            count = 0;
+            capacity = 0;
+            std::cout << "Память освобождена\n";
+        }
+    }
+
+    void run() {
+        // Установка локали для поддержки русского языка
+        std::setlocale(LC_ALL, "ru_RU.UTF-8");
+        
+        int choice;
+
+        do {
+            print_menu();
+            std::cin >> choice;
+
+            switch(choice) {
+                case 1: allocate_memory(); break;
+                case 2: input_pharmacies(); break;
+                case 3: search_pharmacy(); break;
+                case 4: sort_pharmacies(); break;
+                case 5: edit_pharmacy(); break;
+                case 6: add_pharmacy(); break;
+                case 7: delete_pharmacy(); break;
+                case 8: insert_pharmacy(); break;
+                case 9: save_to_file(); break;
+                case 10: load_from_file(); break;
+                case 11: print_pharmacies(); break;
+                case 12: free_memory(); break;
+                case 13: std::cout << "Программа завершена.\n"; break;
+                default: std::cout << "Неверный выбор!\n";
+            }
+        } while(choice != 13);
+    }
+};
+
+int main() {
+    PharmacyManager manager;
+    manager.run();
+    return 0;
+}
