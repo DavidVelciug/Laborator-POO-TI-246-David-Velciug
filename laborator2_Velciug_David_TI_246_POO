@@ -1,0 +1,234 @@
+#include <cassert>
+#include <iostream>
+#include <stdexcept>
+
+class DoublyLinkedList {
+private:
+    struct Node {
+        int data;
+        Node* prev;
+        Node* next;
+        
+        Node(int value = 0, Node* p = nullptr, Node* n = nullptr) 
+            : data(value), prev(p), next(n) {}
+    };
+
+    Node* head;
+    Node* tail;
+    size_t list_size;
+
+public:
+    // Конструктор по умолчанию
+    DoublyLinkedList() : head(nullptr), tail(nullptr), list_size(0) {}
+
+    // Конструктор с параметром size_t
+    DoublyLinkedList(size_t size) : head(nullptr), tail(nullptr), list_size(0) {
+        for (size_t i = 0; i < size; ++i) {
+            push_back(0); // заполняем значениями по умолчанию
+        }
+    }
+
+    // Конструктор с массивом и размером
+    DoublyLinkedList(const int array[], size_t size) : head(nullptr), tail(nullptr), list_size(0) {
+        for (size_t i = 0; i < size; ++i) {
+            push_back(array[i]);
+        }
+    }
+
+    // Конструктор копирования
+    DoublyLinkedList(const DoublyLinkedList& other) : head(nullptr), tail(nullptr), list_size(0) {
+        Node* current = other.head;
+        while (current != nullptr) {
+            push_back(current->data);
+            current = current->next;
+        }
+    }
+
+    // Конструктор перемещения
+    DoublyLinkedList(DoublyLinkedList&& other) noexcept 
+        : head(other.head), tail(other.tail), list_size(other.list_size) {
+        other.head = nullptr;
+        other.tail = nullptr;
+        other.list_size = 0;
+    }
+
+    // Деструктор
+    ~DoublyLinkedList() {
+        clear();
+    }
+
+    // Метод clear
+    void clear() {
+        while (head != nullptr) {
+            Node* temp = head;
+            head = head->next;
+            delete temp;
+        }
+        head = nullptr;
+        tail = nullptr;
+        list_size = 0;
+    }
+
+    // Метод at
+    int at(int index) {
+        if (empty()) {
+            throw std::out_of_range("List is empty");
+        }
+
+        // Обработка отрицательных индексов
+        if (index < 0) {
+            index = list_size + index;
+        }
+
+        // Проверка границ
+        if (index < 0) {
+            return head->data;
+        }
+        if (index >= static_cast<int>(list_size)) {
+            return tail->data;
+        }
+
+        // Поиск элемента
+        Node* current = head;
+        for (int i = 0; i < index && current != nullptr; ++i) {
+            current = current->next;
+        }
+
+        return current->data;
+    }
+
+    // Метод resize
+    void resize(size_t new_size) {
+        if (new_size == list_size) {
+            return;
+        }
+
+        if (new_size < list_size) {
+            // Удаляем лишние элементы с конца
+            size_t elements_to_remove = list_size - new_size;
+            for (size_t i = 0; i < elements_to_remove; ++i) {
+                pop_back();
+            }
+        } else {
+            // Добавляем элементы с значениями по умолчанию
+            size_t elements_to_add = new_size - list_size;
+            for (size_t i = 0; i < elements_to_add; ++i) {
+                push_back(0);
+            }
+        }
+    }
+
+    // Метод assign
+    void assign(size_t count, int value) {
+        clear();
+        for (size_t i = 0; i < count; ++i) {
+            push_back(value);
+        }
+    }
+
+    // Метод empty
+    bool empty() const {
+        return list_size == 0;
+    }
+
+    // Метод swap
+    void swap(DoublyLinkedList& other) {
+        std::swap(head, other.head);
+        std::swap(tail, other.tail);
+        std::swap(list_size, other.list_size);
+    }
+
+    // Метод size
+    size_t size() const {
+        return list_size;
+    }
+
+    // Статический метод is_equal
+    static bool is_equal(const DoublyLinkedList& list1, const DoublyLinkedList& list2) {
+        if (list1.list_size != list2.list_size) {
+            return false;
+        }
+
+        Node* current1 = list1.head;
+        Node* current2 = list2.head;
+        while (current1 != nullptr && current2 != nullptr) {
+            if (current1->data != current2->data) {
+                return false;
+            }
+            current1 = current1->next;
+            current2 = current2->next;
+        }
+
+        return true;
+    }
+
+private:
+    // Вспомогательные методы для работы со списком
+    void push_back(int value) {
+        Node* new_node = new Node(value, tail, nullptr);
+        
+        if (tail != nullptr) {
+            tail->next = new_node;
+        } else {
+            head = new_node;
+        }
+        
+        tail = new_node;
+        list_size++;
+    }
+
+    void pop_back() {
+        if (tail == nullptr) {
+            return;
+        }
+
+        Node* temp = tail;
+        tail = tail->prev;
+        
+        if (tail != nullptr) {
+            tail->next = nullptr;
+        } else {
+            head = nullptr;
+        }
+        
+        delete temp;
+        list_size--;
+    }
+};
+
+// Тестирование
+int main(int argc, char const *argv[]) {
+    int array[] = {1, 4, 7, 9};
+    DoublyLinkedList a(array, 4);
+    assert(4 == a.size());
+    assert(1 == a.at(0));
+    assert(9 == a.at(10));
+    
+    DoublyLinkedList b(a);
+    assert(DoublyLinkedList::is_equal(a, b));
+    
+    b.clear();
+    assert(b.empty());
+    
+    DoublyLinkedList c;
+    assert(c.empty());
+    
+    c.assign(3, 7);
+    assert(3 == c.size());
+    
+    DoublyLinkedList d(5);
+    assert(5 == d.size());
+    
+    d.resize(10);
+    b.swap(d);
+    assert(10 == b.size());
+    assert(d.empty());
+
+    // Тест с семантикой перемещения
+    DoublyLinkedList e(std::move(b));
+    assert(10 == e.size());
+    assert(b.empty());
+
+    std::cout << "All tests passed successfully!" << std::endl;
+    return 0;
+}
