@@ -10,7 +10,13 @@ private:
         Node* next;
         
         Node(int value = 0, Node* p = nullptr, Node* n = nullptr) 
-            : data(value), prev(p), next(n) {}
+            : data(value), prev(p), next(n) {
+            std::cout << "  [Node] Создан узел с данными: " << data << std::endl;
+        }
+        
+        ~Node() {
+            std::cout << "  [Node] Удален узел с данными: " << data << std::endl;
+        }
     };
 
     Node* head;
@@ -19,46 +25,59 @@ private:
 
 public:
     // Конструктор по умолчанию
-    DoublyLinkedList() : head(nullptr), tail(nullptr), list_size(0) {}
+    DoublyLinkedList() : head(nullptr), tail(nullptr), list_size(0) {
+        std::cout << "[List] Создан пустой список" << std::endl;
+    }
 
     // Конструктор с параметром size_t
     DoublyLinkedList(size_t size) : head(nullptr), tail(nullptr), list_size(0) {
+        std::cout << "[List] Создание списка размером: " << size << std::endl;
         for (size_t i = 0; i < size; ++i) {
-            push_back(0); // заполняем значениями по умолчанию
+            push_back(0);
         }
+        std::cout << "[List] Создан список размером: " << list_size << std::endl;
     }
 
     // Конструктор с массивом и размером
     DoublyLinkedList(const int array[], size_t size) : head(nullptr), tail(nullptr), list_size(0) {
+        std::cout << "[List] Создание списка из массива размером: " << size << std::endl;
         for (size_t i = 0; i < size; ++i) {
             push_back(array[i]);
         }
+        std::cout << "[List] Создан список из массива, размер: " << list_size << std::endl;
     }
 
     // Конструктор копирования
     DoublyLinkedList(const DoublyLinkedList& other) : head(nullptr), tail(nullptr), list_size(0) {
+        std::cout << "[List] Копирование списка (размер оригинала: " << other.list_size << ")" << std::endl;
         Node* current = other.head;
         while (current != nullptr) {
             push_back(current->data);
             current = current->next;
         }
+        std::cout << "[List] Копирование завершено, размер: " << list_size << std::endl;
     }
 
     // Конструктор перемещения
     DoublyLinkedList(DoublyLinkedList&& other) noexcept 
         : head(other.head), tail(other.tail), list_size(other.list_size) {
+        std::cout << "[List] Перемещение списка (размер оригинала: " << other.list_size << ")" << std::endl;
         other.head = nullptr;
         other.tail = nullptr;
         other.list_size = 0;
+        std::cout << "[List] Перемещение завершено, размер: " << list_size << std::endl;
     }
 
     // Деструктор
     ~DoublyLinkedList() {
+        std::cout << "[List] Удаление списка (размер: " << list_size << ")" << std::endl;
         clear();
+        std::cout << "[List] Список удален" << std::endl;
     }
 
     // Метод clear
     void clear() {
+        std::cout << "  [clear] Очистка списка (текущий размер: " << list_size << ")" << std::endl;
         while (head != nullptr) {
             Node* temp = head;
             head = head->next;
@@ -67,24 +86,31 @@ public:
         head = nullptr;
         tail = nullptr;
         list_size = 0;
+        std::cout << "  [clear] Список очищен" << std::endl;
     }
 
     // Метод at
     int at(int index) {
+        std::cout << "  [at] Запрос элемента по индексу: " << index << " (размер списка: " << list_size << ")" << std::endl;
+        
         if (empty()) {
+            std::cout << "  [at] ОШИБКА: список пуст!" << std::endl;
             throw std::out_of_range("List is empty");
         }
 
         // Обработка отрицательных индексов
         if (index < 0) {
             index = list_size + index;
+            std::cout << "  [at] Преобразованный индекс: " << index << std::endl;
         }
 
         // Проверка границ
         if (index < 0) {
+            std::cout << "  [at] Возврат первого элемента: " << head->data << std::endl;
             return head->data;
         }
         if (index >= static_cast<int>(list_size)) {
+            std::cout << "  [at] Возврат последнего элемента: " << tail->data << std::endl;
             return tail->data;
         }
 
@@ -94,58 +120,75 @@ public:
             current = current->next;
         }
 
+        std::cout << "  [at] Найден элемент: " << current->data << std::endl;
         return current->data;
     }
 
     // Метод resize
     void resize(size_t new_size) {
+        std::cout << "  [resize] Изменение размера с " << list_size << " на " << new_size << std::endl;
+        
         if (new_size == list_size) {
+            std::cout << "  [resize] Размер не изменился" << std::endl;
             return;
         }
 
         if (new_size < list_size) {
             // Удаляем лишние элементы с конца
             size_t elements_to_remove = list_size - new_size;
+            std::cout << "  [resize] Удаление " << elements_to_remove << " элементов" << std::endl;
             for (size_t i = 0; i < elements_to_remove; ++i) {
                 pop_back();
             }
         } else {
             // Добавляем элементы с значениями по умолчанию
             size_t elements_to_add = new_size - list_size;
+            std::cout << "  [resize] Добавление " << elements_to_add << " элементов" << std::endl;
             for (size_t i = 0; i < elements_to_add; ++i) {
                 push_back(0);
             }
         }
+        std::cout << "  [resize] Новый размер: " << list_size << std::endl;
     }
 
     // Метод assign
     void assign(size_t count, int value) {
+        std::cout << "  [assign] Заполнение " << count << " элементами со значением " << value << std::endl;
         clear();
         for (size_t i = 0; i < count; ++i) {
             push_back(value);
         }
+        std::cout << "  [assign] Заполнение завершено, размер: " << list_size << std::endl;
     }
 
     // Метод empty
     bool empty() const {
-        return list_size == 0;
+        bool result = list_size == 0;
+        std::cout << "  [empty] Проверка пустоты: " << (result ? "ДА" : "НЕТ") << std::endl;
+        return result;
     }
 
     // Метод swap
     void swap(DoublyLinkedList& other) {
+        std::cout << "  [swap] Обмен списками (размеры: " << list_size << " и " << other.list_size << ")" << std::endl;
         std::swap(head, other.head);
         std::swap(tail, other.tail);
         std::swap(list_size, other.list_size);
+        std::cout << "  [swap] Обмен завершен" << std::endl;
     }
 
     // Метод size
     size_t size() const {
+        std::cout << "  [size] Запрос размера: " << list_size << std::endl;
         return list_size;
     }
 
     // Статический метод is_equal
     static bool is_equal(const DoublyLinkedList& list1, const DoublyLinkedList& list2) {
+        std::cout << "[is_equal] Сравнение списков (размеры: " << list1.list_size << " и " << list2.list_size << ")" << std::endl;
+        
         if (list1.list_size != list2.list_size) {
+            std::cout << "[is_equal] Размеры разные - списки НЕ равны" << std::endl;
             return false;
         }
 
@@ -153,18 +196,21 @@ public:
         Node* current2 = list2.head;
         while (current1 != nullptr && current2 != nullptr) {
             if (current1->data != current2->data) {
+                std::cout << "[is_equal] Найдены разные элементы - списки НЕ равны" << std::endl;
                 return false;
             }
             current1 = current1->next;
             current2 = current2->next;
         }
 
+        std::cout << "[is_equal] Списки РАВНЫ" << std::endl;
         return true;
     }
 
 private:
     // Вспомогательные методы для работы со списком
     void push_back(int value) {
+        std::cout << "    [push_back] Добавление элемента: " << value << std::endl;
         Node* new_node = new Node(value, tail, nullptr);
         
         if (tail != nullptr) {
@@ -175,13 +221,16 @@ private:
         
         tail = new_node;
         list_size++;
+        std::cout << "    [push_back] Элемент добавлен, новый размер: " << list_size << std::endl;
     }
 
     void pop_back() {
         if (tail == nullptr) {
+            std::cout << "    [pop_back] Список пуст, удаление невозможно" << std::endl;
             return;
         }
 
+        std::cout << "    [pop_back] Удаление последнего элемента: " << tail->data << std::endl;
         Node* temp = tail;
         tail = tail->prev;
         
@@ -193,42 +242,54 @@ private:
         
         delete temp;
         list_size--;
+        std::cout << "    [pop_back] Элемент удален, новый размер: " << list_size << std::endl;
     }
 };
 
 // Тестирование
 int main(int argc, char const *argv[]) {
+    std::cout << "=== НАЧАЛО ТЕСТИРОВАНИЯ ===" << std::endl;
+    
+    std::cout << "\n--- Тест 1: Создание из массива ---" << std::endl;
     int array[] = {1, 4, 7, 9};
     DoublyLinkedList a(array, 4);
+    
+    std::cout << "\n--- Тест 2: Проверка размера и доступа ---" << std::endl;
     assert(4 == a.size());
     assert(1 == a.at(0));
     assert(9 == a.at(10));
     
+    std::cout << "\n--- Тест 3: Копирование ---" << std::endl;
     DoublyLinkedList b(a);
     assert(DoublyLinkedList::is_equal(a, b));
     
+    std::cout << "\n--- Тест 4: Очистка ---" << std::endl;
     b.clear();
     assert(b.empty());
     
+    std::cout << "\n--- Тест 5: Пустой список ---" << std::endl;
     DoublyLinkedList c;
     assert(c.empty());
     
+    std::cout << "\n--- Тест 6: Assign ---" << std::endl;
     c.assign(3, 7);
     assert(3 == c.size());
     
+    std::cout << "\n--- Тест 7: Создание с размером ---" << std::endl;
     DoublyLinkedList d(5);
     assert(5 == d.size());
     
+    std::cout << "\n--- Тест 8: Resize и Swap ---" << std::endl;
     d.resize(10);
     b.swap(d);
     assert(10 == b.size());
     assert(d.empty());
 
-    // Тест с семантикой перемещения
+    std::cout << "\n--- Тест 9: Перемещение ---" << std::endl;
     DoublyLinkedList e(std::move(b));
     assert(10 == e.size());
     assert(b.empty());
 
-    std::cout << "All tests passed successfully!" << std::endl;
+    std::cout << "\n=== ВСЕ ТЕСТЫ ПРОЙДЕНЫ УСПЕШНО! ===" << std::endl;
     return 0;
 }
