@@ -24,12 +24,10 @@ private:
     size_t list_size;
 
 public:
-    // Конструктор по умолчанию
     DoublyLinkedList() : head(nullptr), tail(nullptr), list_size(0) {
         std::cout << "[List] Создан пустой список" << std::endl;
     }
 
-    // Конструктор с параметром size_t
     DoublyLinkedList(size_t size) : head(nullptr), tail(nullptr), list_size(0) {
         std::cout << "[List] Создание списка размером: " << size << std::endl;
         for (size_t i = 0; i < size; ++i) {
@@ -38,7 +36,6 @@ public:
         std::cout << "[List] Создан список размером: " << list_size << std::endl;
     }
 
-    // Конструктор с массивом и размером
     DoublyLinkedList(const int array[], size_t size) : head(nullptr), tail(nullptr), list_size(0) {
         std::cout << "[List] Создание списка из массива размером: " << size << std::endl;
         for (size_t i = 0; i < size; ++i) {
@@ -47,7 +44,6 @@ public:
         std::cout << "[List] Создан список из массива, размер: " << list_size << std::endl;
     }
 
-    // Конструктор копирования
     DoublyLinkedList(const DoublyLinkedList& other) : head(nullptr), tail(nullptr), list_size(0) {
         std::cout << "[List] Копирование списка (размер оригинала: " << other.list_size << ")" << std::endl;
         Node* current = other.head;
@@ -58,7 +54,6 @@ public:
         std::cout << "[List] Копирование завершено, размер: " << list_size << std::endl;
     }
 
-    // Конструктор перемещения
     DoublyLinkedList(DoublyLinkedList&& other) noexcept 
         : head(other.head), tail(other.tail), list_size(other.list_size) {
         std::cout << "[List] Перемещение списка (размер оригинала: " << other.list_size << ")" << std::endl;
@@ -68,14 +63,12 @@ public:
         std::cout << "[List] Перемещение завершено, размер: " << list_size << std::endl;
     }
 
-    // Деструктор
     ~DoublyLinkedList() {
         std::cout << "[List] Удаление списка (размер: " << list_size << ")" << std::endl;
         clear();
         std::cout << "[List] Список удален" << std::endl;
     }
 
-    // Метод clear
     void clear() {
         std::cout << "  [clear] Очистка списка (текущий размер: " << list_size << ")" << std::endl;
         while (head != nullptr) {
@@ -89,7 +82,6 @@ public:
         std::cout << "  [clear] Список очищен" << std::endl;
     }
 
-    // Метод at
     int at(int index) {
         std::cout << "  [at] Запрос элемента по индексу: " << index << " (размер списка: " << list_size << ")" << std::endl;
         
@@ -98,13 +90,11 @@ public:
             throw std::out_of_range("List is empty");
         }
 
-        // Обработка отрицательных индексов
         if (index < 0) {
             index = list_size + index;
             std::cout << "  [at] Преобразованный индекс: " << index << std::endl;
         }
 
-        // Проверка границ
         if (index < 0) {
             std::cout << "  [at] Возврат первого элемента: " << head->data << std::endl;
             return head->data;
@@ -114,7 +104,6 @@ public:
             return tail->data;
         }
 
-        // Поиск элемента
         Node* current = head;
         for (int i = 0; i < index && current != nullptr; ++i) {
             current = current->next;
@@ -124,7 +113,6 @@ public:
         return current->data;
     }
 
-    // Метод resize
     void resize(size_t new_size) {
         std::cout << "  [resize] Изменение размера с " << list_size << " на " << new_size << std::endl;
         
@@ -134,14 +122,12 @@ public:
         }
 
         if (new_size < list_size) {
-            // Удаляем лишние элементы с конца
             size_t elements_to_remove = list_size - new_size;
             std::cout << "  [resize] Удаление " << elements_to_remove << " элементов" << std::endl;
             for (size_t i = 0; i < elements_to_remove; ++i) {
                 pop_back();
             }
         } else {
-            // Добавляем элементы с значениями по умолчанию
             size_t elements_to_add = new_size - list_size;
             std::cout << "  [resize] Добавление " << elements_to_add << " элементов" << std::endl;
             for (size_t i = 0; i < elements_to_add; ++i) {
@@ -151,7 +137,6 @@ public:
         std::cout << "  [resize] Новый размер: " << list_size << std::endl;
     }
 
-    // Метод assign
     void assign(size_t count, int value) {
         std::cout << "  [assign] Заполнение " << count << " элементами со значением " << value << std::endl;
         clear();
@@ -161,14 +146,12 @@ public:
         std::cout << "  [assign] Заполнение завершено, размер: " << list_size << std::endl;
     }
 
-    // Метод empty
     bool empty() const {
         bool result = list_size == 0;
         std::cout << "  [empty] Проверка пустоты: " << (result ? "ДА" : "НЕТ") << std::endl;
         return result;
     }
 
-    // Метод swap
     void swap(DoublyLinkedList& other) {
         std::cout << "  [swap] Обмен списками (размеры: " << list_size << " и " << other.list_size << ")" << std::endl;
         std::swap(head, other.head);
@@ -177,13 +160,12 @@ public:
         std::cout << "  [swap] Обмен завершен" << std::endl;
     }
 
-    // Метод size
     size_t size() const {
         std::cout << "  [size] Запрос размера: " << list_size << std::endl;
         return list_size;
     }
 
-    // Статический метод is_equal
+
     static bool is_equal(const DoublyLinkedList& list1, const DoublyLinkedList& list2) {
         std::cout << "[is_equal] Сравнение списков (размеры: " << list1.list_size << " и " << list2.list_size << ")" << std::endl;
         
@@ -208,7 +190,6 @@ public:
     }
 
 private:
-    // Вспомогательные методы для работы со списком
     void push_back(int value) {
         std::cout << "    [push_back] Добавление элемента: " << value << std::endl;
         Node* new_node = new Node(value, tail, nullptr);
@@ -246,7 +227,6 @@ private:
     }
 };
 
-// Тестирование
 int main(int argc, char const *argv[]) {
     std::cout << "=== НАЧАЛО ТЕСТИРОВАНИЯ ===" << std::endl;
     
