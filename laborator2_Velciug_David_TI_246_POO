@@ -2,7 +2,7 @@
 #include <iostream>
 #include <stdexcept>
 
-class DoublyLinkedList {
+class abstract_data_t {
 private:
     struct Node {
         int data;
@@ -24,12 +24,12 @@ private:
 
 public:
     // Конструктор по умолчанию
-    DoublyLinkedList() : head(nullptr), tail(nullptr), list_size(0) {
+    abstract_data_t() : head(nullptr), tail(nullptr), list_size(0) {
         std::cout << "Конструктор по умолчанию вызван" << std::endl;
     }
     
     // Конструктор с размером
-    DoublyLinkedList(size_t size) : head(nullptr), tail(nullptr), list_size(0) {
+    abstract_data_t(size_t size) : head(nullptr), tail(nullptr), list_size(0) {
         std::cout << "Конструктор с размером вызван с размером: " << size << std::endl;
         for (size_t i = 0; i < size; ++i) {
             push_back(0);
@@ -37,7 +37,7 @@ public:
     }
     
     // Конструктор из массива
-    DoublyLinkedList(const int array[], size_t size) : head(nullptr), tail(nullptr), list_size(0) {
+    abstract_data_t(const int array[], size_t size) : head(nullptr), tail(nullptr), list_size(0) {
         std::cout << "Конструктор из массива вызван с размером: " << size << std::endl;
         for (size_t i = 0; i < size; ++i) {
             push_back(array[i]);
@@ -45,7 +45,7 @@ public:
     }
     
     // Конструктор копирования
-    DoublyLinkedList(const DoublyLinkedList& other) : head(nullptr), tail(nullptr), list_size(0) {
+    abstract_data_t(const abstract_data_t& other) : head(nullptr), tail(nullptr), list_size(0) {
         std::cout << "Конструктор копирования вызван" << std::endl;
         Node* current = other.head;
         while (current != nullptr) {
@@ -55,7 +55,7 @@ public:
     }
     
     // Конструктор перемещения
-    DoublyLinkedList(DoublyLinkedList&& other) noexcept 
+    abstract_data_t(abstract_data_t&& other) noexcept 
         : head(other.head), tail(other.tail), list_size(other.list_size) {
         std::cout << "Конструктор перемещения вызван" << std::endl;
         other.head = nullptr;
@@ -64,7 +64,7 @@ public:
     }
     
     // Оператор присваивания копированием
-    DoublyLinkedList& operator=(const DoublyLinkedList& other) {
+    abstract_data_t& operator=(const abstract_data_t& other) {
         std::cout << "Оператор присваивания копированием вызван" << std::endl;
         if (this != &other) {
             clear();
@@ -78,7 +78,7 @@ public:
     }
     
     // Оператор присваивания перемещением
-    DoublyLinkedList& operator=(DoublyLinkedList&& other) noexcept {
+    abstract_data_t& operator=(abstract_data_t&& other) noexcept {
         std::cout << "Оператор присваивания перемещением вызван" << std::endl;
         if (this != &other) {
             clear();
@@ -93,7 +93,7 @@ public:
     }
     
     // Деструктор
-    ~DoublyLinkedList() {
+    ~abstract_data_t() {
         std::cout << "Деструктор вызван, размер: " << list_size << std::endl;
         clear();
     }
@@ -173,7 +173,7 @@ public:
     }
     
     // Обмен содержимым
-    void swap(DoublyLinkedList& other) {
+    void swap(abstract_data_t& other) {
         std::cout << "Метод swap вызван" << std::endl;
         
         std::swap(head, other.head);
@@ -186,8 +186,13 @@ public:
         return list_size;
     }
     
+    // Метод length для совместимости с main
+    size_t length() {
+        return size();
+    }
+    
     // Статический метод сравнения
-    static bool is_equal(const DoublyLinkedList& list1, const DoublyLinkedList& list2) {
+    static bool is_equal(const abstract_data_t& list1, const abstract_data_t& list2) {
         std::cout << "Статический метод is_equal вызван" << std::endl;
         
         if (list1.list_size != list2.list_size) {
@@ -239,27 +244,45 @@ private:
     }
 };
 
-// код для проверки правильности выполнения задания:
-int main(int argc, char const *argv[]) {
-    // Вариант двухсвязный список
+// Внешняя функция print для совместимости с main
+void print(abstract_data_t& list) {
+    std::cout << "Вывод списка: [";
+    // Для простоты выведем только первые 10 элементов
+    for (size_t i = 0; i < list.length() && i < 10; ++i) {
+        std::cout << list.at(i);
+        if (i < list.length() - 1 && i < 9) {
+            std::cout << " ";
+        }
+    }
+    if (list.length() > 10) {
+        std::cout << " ...";
+    }
+    std::cout << "]" << std::endl;
+}
+
+int main()
+{
     int array[] = {1, 4, 7, 9};
-    DoublyLinkedList a(array, 4);
-    assert(4 == a.size());
+
+    abstract_data_t a(array, 4);
+    assert(4 == a.length());
     assert(1 == a.at(0));
     assert(9 == a.at(10));
-    DoublyLinkedList b(a);
-    assert(DoublyLinkedList::is_equal(a, b));
+    print(a);
+
+    abstract_data_t b(a);
     b.clear();
     assert(b.empty());
-    DoublyLinkedList c;
+
+    abstract_data_t c;
     assert(c.empty());
     c.assign(3, 7);
-    assert(3 == c.size());
-    DoublyLinkedList d(5);
-    assert(5 == d.size());
+    assert(3 == c.length());
+
+    abstract_data_t d(5);
+    assert(5 == d.length());
     d.resize(10);
     b.swap(d);
-    assert(10 == b.size());
+    assert(10 == b.length());
     assert(d.empty());
-// example with move semantics
 }
