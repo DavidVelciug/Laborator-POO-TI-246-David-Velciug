@@ -1,0 +1,473 @@
+#include <algorithm>
+#include <cassert>
+#include <iostream>
+#include <initializer_list>
+#include <iterator>
+
+class DoublyLinkedList;
+
+class iterator {
+private:
+    DoublyLinkedList* container;
+    int* current;
+
+public:
+    ~iterator() = default;
+    iterator();
+    iterator(const iterator &);
+    iterator(int *);
+    
+    iterator &operator++();
+    iterator operator++(int);
+    iterator &operator--();
+    iterator operator--(int);
+    int& operator*();
+    int* operator->();
+    friend bool operator==(const iterator &, const iterator &);
+    friend bool operator!=(const iterator &, const iterator &);
+
+    iterator(DoublyLinkedList* cont, int* ptr);
+};
+
+namespace std {
+    template<>
+    struct iterator_traits<::iterator> {
+        using iterator_category = bidirectional_iterator_tag;
+        using value_type = int;
+        using difference_type = ptrdiff_t;
+        using pointer = int*;
+        using reference = int&;
+    };
+}
+
+class DoublyLinkedList {
+private:
+    struct Node {
+        int data;
+        Node* prev;
+        Node* next;
+        
+        Node(int value) : data(value), prev(nullptr), next(nullptr) {}
+        ~Node() = default;
+    };
+    
+    Node* head;
+    Node* tail;
+    size_t list_size;
+
+public:
+    // работа с указателям
+    int* get_pointer_to_first() const {
+        return head ? &head->data : nullptr;
+    }
+    
+    int* get_pointer_to_last() const {
+        return tail ? &tail->data : nullptr;
+    }
+    
+    int* get_next_pointer(int* ptr) const {
+        if (!ptr) return nullptr;
+        Node* current = head;
+        while (current && &current->data != ptr) {
+            current = current->next;
+        }
+        return current && current->next ? &current->next->data : nullptr;
+    }
+    
+    int* get_prev_pointer(int* ptr) const {
+        if (!ptr) return nullptr;
+        Node* current = head;
+        while (current && &current->data != ptr) {
+            current = current->next;
+        }
+        return current && current->prev ? &current->prev->data : nullptr;
+    }
+
+    // конструкторы и деструкторы из прошлой лабораторной
+    ~DoublyLinkedList() {
+        clear();
+    }
+    
+    DoublyLinkedList() : head(nullptr), tail(nullptr), list_size(0) {}
+    
+    DoublyLinkedList(size_t size) : head(nullptr), tail(nullptr), list_size(0) {
+        for (size_t i = 0; i < size; ++i) {
+            push_back(0);
+        }
+    }
+    
+    // итераторы
+    DoublyLinkedList(std::initializer_list<int>);
+    DoublyLinkedList(iterator, iterator);
+    
+    DoublyLinkedList(const int array[], size_t size) : head(nullptr), tail(nullptr), list_size(0) {
+        for (size_t i = 0; i < size; ++i) {
+            push_back(array[i]);
+        }
+    }
+    
+    DoublyLinkedList(const DoublyLinkedList& other) : head(nullptr), tail(nullptr), list_size(0) {
+        Node* current = other.head;
+        while (current != nullptr) {
+            push_back(current->data);
+            current = current->next;
+        }
+    }
+    
+    DoublyLinkedList(DoublyLinkedList&& other) noexcept 
+        : head(other.head), tail(other.tail), list_size(other.list_size) {
+        other.head = nullptr;
+        other.tail = nullptr;
+        other.list_size = 0;
+    }
+    
+    DoublyLinkedList& operator=(const DoublyLinkedList& other) {
+        if (this != &other) {
+            clear();
+            Node* current = other.head;
+            while (current != nullptr) {
+                push_back(current->data);
+                current = current->next;
+            }
+        }
+        return *this;
+    }
+    
+    DoublyLinkedList& operator=(DoublyLinkedList&& other) noexcept {
+        if (this != &other) {
+            clear();
+            head = other.head;
+            tail = other.tail;
+            list_size = other.list_size;
+            other.head = nullptr;
+            other.tail = nullptr;
+            other.list_size = 0;
+        }
+        return *this;
+    }
+    
+    // основные методы(лаба1)
+    void clear() {
+        while (head != nullptr) {
+            Node* temp = head;
+            head = head->next;
+            delete temp;
+        }
+        tail = nullptr;
+        list_size = 0;
+    }
+    
+    int at(int index) {
+        if (empty()) {
+            return 0;
+        }
+        
+        if (index < 0) {
+            return head->data;
+        }
+        if (index >= static_cast<int>(list_size)) {
+            return tail->data;
+        }
+        
+        Node* current = head;
+        for (int i = 0; i < index && current != nullptr; ++i) {
+            current = current->next;
+        }
+        
+        return current->data;
+    }
+    
+    void resize(size_t new_size) {
+        if (new_size < list_size) {
+            while (list_size > new_size) {
+                pop_back();
+            }
+        } else if (new_size > list_size) {
+            while (list_size < new_size) {
+                push_back(0);
+            }
+        }
+    }
+    
+    void assign(size_t count, int value) {
+        clear();
+        for (size_t i = 0; i < count; ++i) {
+            push_back(value);
+        }
+    }
+    
+    // итератор
+    void assign(iterator, iterator);
+    
+    bool empty() {
+        return list_size == 0;
+    }
+    
+    void swap(DoublyLinkedList& other) {
+        std::swap(head, other.head);
+        std::swap(tail, other.tail);
+        std::swap(list_size, other.list_size);
+    }
+    
+    size_t size() {
+        return list_size;
+    }
+    
+    static bool is_equal(const DoublyLinkedList& list1, const DoublyLinkedList& list2) {
+        if (list1.list_size != list2.list_size) {
+            return false;
+        }
+        
+        Node* current1 = list1.head;
+        Node* current2 = list2.head;
+        
+        while (current1 != nullptr && current2 != nullptr) {
+            if (current1->data != current2->data) {
+                return false;
+            }
+            current1 = current1->next;
+            current2 = current2->next;
+        }
+        
+        return true;
+    }
+
+    // операторы сравнения(лаба3)
+    friend bool operator==(const DoublyLinkedList& lhs, const DoublyLinkedList& rhs) {
+        return DoublyLinkedList::is_equal(lhs, rhs);
+    }
+    
+    friend bool operator!=(const DoublyLinkedList& lhs, const DoublyLinkedList& rhs) {
+        return !(lhs == rhs);
+    }
+    
+    friend bool operator<(const DoublyLinkedList& lhs, const DoublyLinkedList& rhs) {
+        Node* current1 = lhs.head;
+        Node* current2 = rhs.head;
+        
+        while (current1 != nullptr && current2 != nullptr) {
+            if (current1->data < current2->data) {
+                return true;
+            } else if (current1->data > current2->data) {
+                return false;
+            }
+            current1 = current1->next;
+            current2 = current2->next;
+        }
+        
+        return lhs.list_size < rhs.list_size;
+    }
+    
+    friend bool operator>(const DoublyLinkedList& lhs, const DoublyLinkedList& rhs) {
+        return rhs < lhs;
+    }
+    
+    friend bool operator<=(const DoublyLinkedList& lhs, const DoublyLinkedList& rhs) {
+        return !(lhs > rhs);
+    }
+    
+    friend bool operator>=(const DoublyLinkedList& lhs, const DoublyLinkedList& rhs) {
+        return !(lhs < rhs);
+    }
+    
+    // операторы доступа
+    int& operator[](size_t index) {
+        if (index >= list_size) {
+            throw std::out_of_range("Index out of range");
+        }
+        
+        Node* current = head;
+        for (size_t i = 0; i < index && current != nullptr; ++i) {
+            current = current->next;
+        }
+        
+        return current->data;
+    }
+    
+    friend std::ostream& operator<<(std::ostream& os, const DoublyLinkedList& list) {
+        Node* current = list.head;
+        while (current != nullptr) {
+            os << current->data;
+            if (current->next != nullptr) {
+                os << " ";
+            }
+            current = current->next;
+        }
+        return os;
+    }
+    
+    friend std::istream& operator>>(std::istream& is, DoublyLinkedList& list) {
+        list.clear();
+        int value;
+        while (is >> value) {
+            list.push_back(value);
+        }
+        return is;
+    }
+    
+    // === МЕТОДЫ ИЗ ПРЕДЫДУЩЕЙ ЛАБОРАТОРНОЙ (Поиск и подсчет) ===
+    bool contains(int value) {
+        Node* current = head;
+        while (current != nullptr) {
+            if (current->data == value) {
+                return true;
+            }
+            current = current->next;
+        }
+        return false;
+    }
+
+    size_t count(int value) {
+        size_t counter = 0;
+        Node* current = head;
+        while (current != nullptr) {
+            if (current->data == value) {
+                counter++;
+            }
+            current = current->next;
+        }
+        return counter;
+    }
+
+    // итераторы
+    auto begin();
+    auto end();
+    auto rbegin();
+    auto rend();
+
+private:
+    // Внутренние методы(лаба2)
+    void push_back(int value) {
+        Node* new_node = new Node(value);
+        
+        if (tail == nullptr) {
+            head = tail = new_node;
+        } else {
+            tail->next = new_node;
+            new_node->prev = tail;
+            tail = new_node;
+        }
+        list_size++;
+    }
+    
+    void pop_back() {
+        if (tail == nullptr) return;
+        
+        Node* temp = tail;
+        if (tail->prev != nullptr) {
+            tail = tail->prev;
+            tail->next = nullptr;
+        } else {
+            head = tail = nullptr;
+        }
+        
+        delete temp;
+        list_size--;
+    }
+};
+
+// iterator методы
+iterator::iterator() : container(nullptr), current(nullptr) {}
+iterator::iterator(const iterator &other) : container(other.container), current(other.current) {}
+iterator::iterator(int *ptr) : container(nullptr), current(ptr) {}
+iterator::iterator(DoublyLinkedList* cont, int* ptr) : container(cont), current(ptr) {}
+
+iterator &iterator::operator++() {
+    if (container && current) {
+        current = container->get_next_pointer(current);
+    }
+    return *this;
+}
+
+iterator iterator::operator++(int) {
+    iterator temp = *this;
+    ++(*this);
+    return temp;
+}
+
+iterator &iterator::operator--() {
+    if (container && current) {
+        current = container->get_prev_pointer(current);
+    }
+    return *this;
+}
+
+iterator iterator::operator--(int) {
+    iterator temp = *this;
+    --(*this);
+    return temp;
+}
+
+int& iterator::operator*() {
+    return *current;
+}
+
+int* iterator::operator->() {
+    return &(**this);
+}
+
+bool operator==(const iterator &lhs, const iterator &rhs) {
+    return lhs.current == rhs.current;
+}
+
+bool operator!=(const iterator &lhs, const iterator &rhs) {
+    return !(lhs == rhs);
+}
+
+// DoublyLinkedList методы из лабораторной 4
+// конструктор из списка инициализации
+DoublyLinkedList::DoublyLinkedList(std::initializer_list<int> init_list) : head(nullptr), tail(nullptr), list_size(0) {
+    for (int value : init_list) {
+        push_back(value);
+    }
+}
+
+// конструктор из диапазона итераторов
+DoublyLinkedList::DoublyLinkedList(iterator start, iterator end) : head(nullptr), tail(nullptr), list_size(0) {
+    for (auto it = start; it != end; ++it) {
+        push_back(*it);
+    }
+}
+
+void DoublyLinkedList::assign(iterator start, iterator end) {
+    clear();
+    for (auto it = start; it != end; ++it) {
+        push_back(*it);
+    }
+}
+
+auto DoublyLinkedList::begin() {
+    return iterator(this, get_pointer_to_first());
+}
+
+auto DoublyLinkedList::end() {
+    return iterator(this, nullptr);
+}
+
+auto DoublyLinkedList::rbegin() {
+    return iterator(this, get_pointer_to_last());
+}
+
+auto DoublyLinkedList::rend() {
+    return iterator(this, nullptr);
+}
+
+using container = DoublyLinkedList;
+
+int main() {
+    container a({19, 47, 74, 91});
+    for (auto it = a.begin(); it != a.end(); ++it) std::cout << *it << " ";
+
+    container b(a.begin(), a.end());
+    assert(a == b);
+    for (auto &&it : b) std::cout << it << " ";
+
+    container c;
+    c.assign(std::distance(b.begin(), b.end()), 0);
+    std::copy(b.begin(), b.end(), c.begin());
+    assert(std::equal(c.begin(), c.end(), b.begin()));
+    for (auto it = c.rbegin(); it != c.rend(); ++it) std::cout << *it << " ";
+
+    container d(c.rbegin(), c.rend());
+    for (auto &&it : d) std::cout << it << " ";
+}
